@@ -65,10 +65,16 @@ DEFAULT_CONFIG = {
     },
     "render": {
         "renderer": "default",
-        "alignment": "auto"
+        "alignment": "auto",
+        "font_size_minimum": -1,
+        "font_path": ""
     },
     "ocr": {
         "ocr": "48px"
+    },
+    "upscale": {
+        "upscaler": "esrgan",
+        "upscale_ratio": 1
     }
 }
 
@@ -315,6 +321,29 @@ class MangaTranslatorGUI(QMainWindow):
                 self.alignment.setCurrentIndex(index)
         render_layout.addWidget(FormRow("对齐方式:", self.alignment))
         
+        # 添加缩放比例设置
+        self.upscale_ratio = QLineEdit()
+        self.upscale_ratio.setPlaceholderText("默认: 1")
+        if "upscale" in self.config and "upscale_ratio" in self.config["upscale"]:
+            self.upscale_ratio.setText(str(self.config["upscale"]["upscale_ratio"]))
+        render_layout.addWidget(FormRow("缩放比例:", self.upscale_ratio))
+        
+        # 添加最小字体大小设置
+        self.font_size_minimum = QLineEdit()
+        self.font_size_minimum.setPlaceholderText("默认值")
+        if "render" in self.config and "font_size_minimum" in self.config["render"]:
+            self.font_size_minimum.setText(str(self.config["render"]["font_size_minimum"]))
+        render_layout.addWidget(FormRow("最小字体大小:", self.font_size_minimum))
+        
+        # 添加字体路径设置
+        self.font_path = DragDropLineEdit()
+        self.font_path.setPlaceholderText("例如: fonts/anime_ace_3.ttf")
+        if "render" in self.config and "font_path" in self.config["render"]:
+            self.font_path.setText(self.config["render"]["font_path"])
+        browse_font = QPushButton("浏览")
+        browse_font.clicked.connect(self.browse_font_path)
+        render_layout.addWidget(FormRow("字体路径:", self.font_path, browse_font))
+        
         advanced_layout.addWidget(render_group)
         
         # OCR设置
@@ -386,7 +415,8 @@ class MangaTranslatorGUI(QMainWindow):
         self.input_widgets = [
             self.input_dir, self.output_dir, self.target_lang, self.translator,
             self.use_gpu, self.verbose, self.detector, self.inpainter, self.renderer,
-            self.alignment, self.ocr, self.ignore_errors, self.overwrite, self.skip_no_text,
+            self.alignment, self.upscale_ratio, self.font_size_minimum, self.font_path,
+            self.ocr, self.ignore_errors, self.overwrite, self.skip_no_text,
             self.save_config_button, self.tabs
         ]
     
@@ -399,6 +429,11 @@ class MangaTranslatorGUI(QMainWindow):
         dir_path = QFileDialog.getExistingDirectory(self, "选择输出目录")
         if dir_path:
             self.output_dir.setText(dir_path)
+    
+    def browse_font_path(self):
+        file_path, _ = QFileDialog.getOpenFileName(self, "选择字体文件", "", "Fonts (*.ttf);;All Files (*)")
+        if file_path:
+            self.font_path.setText(file_path)
     
     def save_configuration(self):
         # 更新配置
@@ -420,9 +455,42 @@ class MangaTranslatorGUI(QMainWindow):
         self.config["render"]["renderer"] = self.renderer.currentText()
         self.config["render"]["alignment"] = self.alignment.currentText()
         
+        # 确保font_size_minimum保存为整数
+        font_size_min_text = self.font_size_minimum.text()
+        if font_size_min_text:
+            try:
+                self.config["render"]["font_size_minimum"] = int(font_size_min_text)
+            except ValueError:
+                self.output_text.append("警告：最小字体大小必须是整数，已使用默认值-1")
+                self.config["render"]["font_size_minimum"] = -1
+        else:
+            # 如果为空，使用默认值
+            self.config["render"]["font_size_minimum"] = -1
+            
+        # 保存字体路径
+        self.config["render"]["font_path"] = self.font_path.text()
+        
         if "ocr" not in self.config:
             self.config["ocr"] = {}
         self.config["ocr"]["ocr"] = self.ocr.currentText()
+        
+        if "upscale" not in self.config:
+            self.config["upscale"] = {}
+        
+        # 确保upscale_ratio保存为数字
+        upscale_ratio_text = self.upscale_ratio.text()
+        if upscale_ratio_text:
+            try:
+                self.config["upscale"]["upscale_ratio"] = int(upscale_ratio_text)
+            except ValueError:
+                try:
+                    self.config["upscale"]["upscale_ratio"] = float(upscale_ratio_text)
+                except ValueError:
+                    self.output_text.append("警告：缩放比例必须是数字，已使用默认值1")
+                    self.config["upscale"]["upscale_ratio"] = 1
+        else:
+            # 如果为空，使用默认值
+            self.config["upscale"]["upscale_ratio"] = 1
         
         # 保存配置
         save_config(self.config_path, self.config)

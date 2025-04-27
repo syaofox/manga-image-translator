@@ -10,10 +10,16 @@
         "inpainter": "lama_large"
     },
     "render": {
-        "renderer": "default",
-        "alignment": "auto"
+        "renderer": "manga2eng",
+        "alignment": "auto",
+        "upscale_ratio": "2",
+        "font_size_minimum": 30,
+        "font_path": ""
     },
     "ocr": {
         "ocr": "48px"
+    },
+    "upscale": {
+        "upscale_ratio": 1
     }
 }
