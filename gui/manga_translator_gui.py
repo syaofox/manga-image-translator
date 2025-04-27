@@ -211,7 +211,7 @@ class MangaTranslatorGUI(QMainWindow):
     
     def setup_ui(self):
         self.setWindowTitle("漫画翻译工具")
-        self.setMinimumSize(800, 600)
+        self.setMinimumSize(800, 800)
         
         # 创建中央窗口部件
         central_widget = QWidget()

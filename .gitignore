@@ -49,3 +49,4 @@ MANIFEST
 # SSL Used for running server locally
 cert.pem
 key.pem
+config.json
