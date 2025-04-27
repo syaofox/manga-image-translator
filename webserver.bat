@@ -1,0 +1,1 @@
+uv run python server\main.py --use-gpu
