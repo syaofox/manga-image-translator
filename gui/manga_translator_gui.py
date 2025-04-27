@@ -8,7 +8,48 @@ from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
                              QLabel, QLineEdit, QPushButton, QComboBox, QCheckBox, 
                              QTabWidget, QGroupBox, QTextEdit, QFileDialog, QFrame,
                              QSplitter, QScrollArea)
-from PySide6.QtCore import Qt, QThread, Signal
+from PySide6.QtCore import Qt, QThread, Signal, QTimer
+from PySide6.QtGui import QDragEnterEvent, QDropEvent
+
+# 自定义支持拖放的QLineEdit
+class DragDropLineEdit(QLineEdit):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setAcceptDrops(True)
+    
+    def dragEnterEvent(self, event: QDragEnterEvent):
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+    
+    def dragMoveEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+    
+    def dropEvent(self, event: QDropEvent):
+        if event.mimeData().hasUrls():
+            urls = event.mimeData().urls()
+            if urls:  # 确保至少有一个URL
+                file_path = urls[0].toLocalFile()
+                self.setText(file_path)
+                
+                # 如果有多个文件，在工具提示中显示提示
+                if len(urls) > 1:
+                    self.setToolTip(f"注意：已选择第一个文件，忽略其他{len(urls)-1}个文件")
+                else:
+                    self.setToolTip(f"已选择: {file_path}")
+                    
+                # 闪烁输入框以提示用户拖放成功
+                self.setStyleSheet("background-color: #e6ffe6;")  # 淡绿色背景
+                QApplication.processEvents()  # 立即更新UI
+                
+                # 使用计时器在短暂延迟后恢复正常样式
+                QTimer.singleShot(300, self.resetStyle)
+                
+            event.acceptProposedAction()
+    
+    def resetStyle(self):
+        """恢复默认样式"""
+        self.setStyleSheet("")
 
 # 默认配置
 DEFAULT_CONFIG = {
@@ -177,14 +218,16 @@ class MangaTranslatorGUI(QMainWindow):
         basic_tab = QWidget()
         basic_layout = QVBoxLayout(basic_tab)
         
-        # 输入目录
-        self.input_dir = QLineEdit()
+        # 输入目录 - 使用支持拖放的LineEdit
+        self.input_dir = DragDropLineEdit()
+        self.input_dir.setPlaceholderText("请选择或拖放文件/文件夹到此处")
         browse_input = QPushButton("浏览")
         browse_input.clicked.connect(self.browse_input_dir)
         basic_layout.addWidget(FormRow("输入目录:", self.input_dir, browse_input))
         
-        # 输出目录
-        self.output_dir = QLineEdit()
+        # 输出目录 - 使用支持拖放的LineEdit
+        self.output_dir = DragDropLineEdit()
+        self.output_dir.setPlaceholderText("请选择或拖放文件夹到此处")
         browse_output = QPushButton("浏览")
         browse_output.clicked.connect(self.browse_output_dir)
         basic_layout.addWidget(FormRow("输出目录:", self.output_dir, browse_output))
