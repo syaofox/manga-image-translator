@@ -1,0 +1,19 @@
+{
+    "translator": {
+        "translator": "deepseek",
+        "target_lang": "CHS"
+    },
+    "detector": {
+        "detector": "default"
+    },
+    "inpainter": {
+        "inpainter": "lama_large"
+    },
+    "render": {
+        "renderer": "default",
+        "alignment": "auto"
+    },
+    "ocr": {
+        "ocr": "48px"
+    }
+}

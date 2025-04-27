@@ -72,6 +72,7 @@ dependencies = [
     "paddleocr>=2.10.0",
     "paddlepaddle>=3.0.0",
     "paddlepaddle-gpu>=2.6.2 ; sys_platform != 'darwin'",
+    "pyside6>=6.9.0",
 ]
 
 [tool.isort]

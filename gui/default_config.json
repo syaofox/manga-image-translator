@@ -1,0 +1,45 @@
+{
+    "translator": {
+        "translator": "sugoi",
+        "target_lang": "CHS",
+        "no_text_lang_skip": false
+    },
+    "detector": {
+        "detector": "default",
+        "detection_size": 2048,
+        "text_threshold": 0.5,
+        "box_threshold": 0.7,
+        "unclip_ratio": 2.3
+    },
+    "inpainter": {
+        "inpainter": "lama_large",
+        "inpainting_size": 2048,
+        "inpainting_precision": "bf16"
+    },
+    "render": {
+        "renderer": "default",
+        "alignment": "auto",
+        "disable_font_border": false,
+        "font_size_offset": 0,
+        "direction": "auto",
+        "uppercase": false,
+        "lowercase": false
+    },
+    "ocr": {
+        "ocr": "48px",
+        "use_mocr_merge": false,
+        "min_text_length": 1
+    },
+    "upscale": {
+        "upscaler": "esrgan",
+        "upscale_ratio": null,
+        "revert_upscaling": false
+    },
+    "colorizer": {
+        "colorizer": "none",
+        "colorization_size": 576,
+        "denoise_sigma": 30
+    },
+    "kernel_size": 3,
+    "mask_dilation_offset": 0
+} 
