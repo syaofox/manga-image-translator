@@ -3,6 +3,7 @@ import os
 import json
 import subprocess
 import threading
+import datetime
 from pathlib import Path
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
                              QLabel, QLineEdit, QPushButton, QComboBox, QCheckBox, 
@@ -208,6 +209,9 @@ class MangaTranslatorGUI(QMainWindow):
         
         # 翻译状态
         self.is_translating = False
+        
+        # 日志文件
+        self.log_file = None
     
     def setup_ui(self):
         self.setWindowTitle("漫画翻译工具")
@@ -373,6 +377,11 @@ class MangaTranslatorGUI(QMainWindow):
         self.skip_no_text = QCheckBox("跳过无文本图像")
         other_layout.addWidget(self.skip_no_text)
         
+        # 添加保存日志选项
+        self.save_log = QCheckBox("保存翻译日志到@log文件")
+        self.save_log.setChecked(True)
+        other_layout.addWidget(self.save_log)
+        
         advanced_layout.addWidget(other_group)
         advanced_layout.addStretch()
         
@@ -416,7 +425,7 @@ class MangaTranslatorGUI(QMainWindow):
             self.input_dir, self.output_dir, self.target_lang, self.translator,
             self.use_gpu, self.verbose, self.detector, self.inpainter, self.renderer,
             self.alignment, self.upscale_ratio, self.font_size_minimum, self.font_path,
-            self.ocr, self.ignore_errors, self.overwrite, self.skip_no_text,
+            self.ocr, self.ignore_errors, self.overwrite, self.skip_no_text, self.save_log,
             self.save_config_button, self.tabs
         ]
     
@@ -538,6 +547,19 @@ class MangaTranslatorGUI(QMainWindow):
         # 更新配置并保存
         self.save_configuration()
         
+        # 如果需要，创建日志文件
+        if self.save_log.isChecked():
+            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            log_dir = os.path.join(self.application_path, "gui", "log")
+            os.makedirs(log_dir, exist_ok=True)
+            log_path = os.path.join(log_dir, f"@log_{timestamp}.txt")
+            self.log_file = open(log_path, "w", encoding="utf-8")
+            self.log_file.write(f"翻译任务日志 - {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+            self.log_file.write(f"执行命令: {' '.join(cmd)}\n\n")
+            self.output_text.append(f"日志文件将保存到: {log_path}")
+        else:
+            self.log_file = None
+        
         # 显示命令
         self.output_text.append("执行命令：" + " ".join(cmd))
         self.output_text.append("开始翻译...\n")
@@ -567,15 +589,37 @@ class MangaTranslatorGUI(QMainWindow):
             widget.setEnabled(enabled)
     
     def update_output(self, text):
+        # 更新界面输出
         self.output_text.append(text)
         # 滚动到底部
         self.output_text.verticalScrollBar().setValue(
             self.output_text.verticalScrollBar().maximum()
         )
+        
+        # 同时写入日志文件
+        if self.log_file:
+            try:
+                self.log_file.write(text + "\n")
+                self.log_file.flush()
+            except Exception as e:
+                self.output_text.append(f"写入日志文件时出错: {str(e)}")
+                self.log_file = None
     
     def translation_complete(self, return_code):
         status = "已完成" if return_code == 0 else "已中断或出错"
-        self.output_text.append(f"\n翻译{status}，返回代码：{return_code}")
+        complete_message = f"\n翻译{status}，返回代码：{return_code}"
+        self.output_text.append(complete_message)
+        
+        # 关闭日志文件
+        if self.log_file:
+            try:
+                self.log_file.write(complete_message + "\n")
+                self.log_file.write(f"\n日志记录完成 - {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+                self.log_file.close()
+                self.log_file = None
+            except Exception as e:
+                self.output_text.append(f"关闭日志文件时出错: {str(e)}")
+                self.log_file = None
         
         # 重新启用界面控件
         self.set_ui_enabled(True)

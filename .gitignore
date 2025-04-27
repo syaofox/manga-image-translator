@@ -50,3 +50,4 @@ MANIFEST
 cert.pem
 key.pem
 config.json
+gui/log/
