@@ -46,13 +46,13 @@ def save_result(result: Image.Image, dest: str, ctx: Context):
 # -- Format Implementations
 
 class ImageFormat(ExportFormat):
-    SUPPORTED_FORMATS = ['png', 'webp']
+    SUPPORTED_FORMATS = ['png', 'webp', 'PNG', 'WEBP']
 
     def _save(self, result: Image.Image, dest: str, ctx: Context):
         result.save(dest)
 
 class JPGFormat(ExportFormat):
-    SUPPORTED_FORMATS = ['jpg', 'jpeg']
+    SUPPORTED_FORMATS = ['jpg', 'jpeg', 'JPG', 'JPEG']
 
     def _save(self, result: Image.Image, dest: str, ctx: Context):
         result = result.convert('RGB')
@@ -60,7 +60,7 @@ class JPGFormat(ExportFormat):
         result.save(dest, quality=ctx.save_quality, format='JPEG')
 
 class GIMPFormat(ExportFormat):
-    SUPPORTED_FORMATS = ['xcf', 'psd', 'pdf']
+    SUPPORTED_FORMATS = ['xcf', 'psd', 'pdf', 'XCF', 'PSD', 'PDF']
 
     def _save(self, result: Image.Image, dest: str, ctx: Context):
         gimp_render(dest, ctx)
